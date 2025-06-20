@@ -33,7 +33,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
   role       = aws_iam_role.lambda_execution_role.name
 }
 
-# Lambda function
+# Lambda function with SnapStart
 resource "aws_lambda_function" "basic_lambda" {
   filename         = local.lambda_zip_path
   function_name    = var.lambda_function_name
@@ -43,11 +43,16 @@ resource "aws_lambda_function" "basic_lambda" {
   timeout          = var.lambda_timeout
   memory_size      = var.lambda_memory_size
   source_code_hash = filebase64sha256(local.lambda_zip_path)
+  publish          = true
 
   environment {
     variables = {
       QUARKUS_PROFILE = var.environment
     }
+  }
+
+  snap_start {
+    apply_on = "PublishedVersions"
   }
 
   depends_on = [
@@ -63,6 +68,14 @@ resource "aws_cloudwatch_log_group" "lambda_logs" {
   retention_in_days = 14
 
   tags = local.common_tags
+}
+
+# Lambda alias for SnapStart
+resource "aws_lambda_alias" "lambda_live" {
+  name             = "live"
+  description      = "Live alias for SnapStart-enabled Lambda function"
+  function_name    = aws_lambda_function.basic_lambda.function_name
+  function_version = aws_lambda_function.basic_lambda.version
 }
 
 # API Gateway v2 (HTTP API)
@@ -83,11 +96,11 @@ resource "aws_apigatewayv2_api" "basic_lambda_api" {
   tags = local.common_tags
 }
 
-# API Gateway integration with Lambda
+# API Gateway integration with Lambda alias
 resource "aws_apigatewayv2_integration" "lambda_integration" {
   api_id           = aws_apigatewayv2_api.basic_lambda_api.id
   integration_type = "AWS_PROXY"
-  integration_uri  = aws_lambda_function.basic_lambda.invoke_arn
+  integration_uri  = aws_lambda_alias.lambda_live.invoke_arn
 
   integration_method     = "POST"
   payload_format_version = "2.0"
@@ -131,11 +144,11 @@ resource "aws_cloudwatch_log_group" "api_gateway_logs" {
   tags = local.common_tags
 }
 
-# Lambda permission for API Gateway to invoke the function
+# Lambda permission for API Gateway to invoke the alias
 resource "aws_lambda_permission" "api_gateway_invoke" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.basic_lambda.function_name
+  function_name = aws_lambda_alias.lambda_live.arn
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.basic_lambda_api.execution_arn}/*/*"
 }
