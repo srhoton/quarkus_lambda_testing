@@ -24,8 +24,18 @@ output "api_gateway_endpoint" {
 }
 
 output "api_gateway_invoke_url" {
-  description = "Full invoke URL for the GET endpoint"
+  description = "Base invoke URL for the API endpoints"
   value       = "${aws_apigatewayv2_api.basic_lambda_api.api_endpoint}/${aws_apigatewayv2_stage.default.name}/lambda"
+}
+
+output "api_endpoints" {
+  description = "Available API endpoints for CRUD operations"
+  value = {
+    list_items   = "GET ${aws_apigatewayv2_api.basic_lambda_api.api_endpoint}/${aws_apigatewayv2_stage.default.name}/lambda?limit=50&cursor=<cursor>"
+    create_item  = "POST ${aws_apigatewayv2_api.basic_lambda_api.api_endpoint}/${aws_apigatewayv2_stage.default.name}/lambda/{id}"
+    update_item  = "PUT ${aws_apigatewayv2_api.basic_lambda_api.api_endpoint}/${aws_apigatewayv2_stage.default.name}/lambda/{id}"
+    delete_item  = "DELETE ${aws_apigatewayv2_api.basic_lambda_api.api_endpoint}/${aws_apigatewayv2_stage.default.name}/lambda/{id}"
+  }
 }
 
 output "lambda_execution_role_arn" {
@@ -51,4 +61,24 @@ output "lambda_version" {
 output "lambda_snapstart_status" {
   description = "SnapStart optimization status"
   value       = "Enabled on PublishedVersions"
+}
+
+output "dynamodb_table_name" {
+  description = "Name of the DynamoDB table"
+  value       = aws_dynamodb_table.quarkus_lambda_table.name
+}
+
+output "dynamodb_table_arn" {
+  description = "ARN of the DynamoDB table"
+  value       = aws_dynamodb_table.quarkus_lambda_table.arn
+}
+
+output "dynamodb_stream_arn" {
+  description = "ARN of the DynamoDB stream"
+  value       = aws_dynamodb_table.quarkus_lambda_table.stream_arn
+}
+
+output "dynamodb_table_id" {
+  description = "ID of the DynamoDB table"
+  value       = aws_dynamodb_table.quarkus_lambda_table.id
 }

@@ -20,11 +20,17 @@ repositories {
 
 dependencies {
     implementation enforcedPlatform("${quarkusPlatformGroupId}:${quarkusPlatformArtifactId}:${quarkusPlatformVersion}")
+    implementation platform('software.amazon.awssdk:bom:2.21.29')
     implementation 'io.quarkus:quarkus-arc'
     implementation 'io.quarkus:quarkus-amazon-lambda'
+    implementation 'software.amazon.awssdk:dynamodb'
+    implementation 'commons-logging:commons-logging:1.3.3'
+    implementation 'io.quarkus:quarkus-jackson'
     implementation 'io.quarkus:quarkus-logging-json'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.4'
     
     testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.quarkus:quarkus-test-common'
     testImplementation 'org.assertj:assertj-core:3.25.3'
     testImplementation 'org.mockito:mockito-core:5.12.0'
     testImplementation 'org.mockito:mockito-junit-jupiter:5.12.0'
